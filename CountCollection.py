@@ -1,5 +1,21 @@
 # -*- coding:utf-8 -*-
 import openpyxl
+from openpyxl.utils import column_index_from_string
+
+def is_cell_merged(i,s):
+    """判断单元格是否在合并的单元
+    格内！！！
+
+    s是字符串列名，
+    需转换为列号"""
+    j = column_index_from_string(s)
+    merged_list = wsVillage.merged_cells
+    for cell in merged_list:
+        if i > cell.min_row and i <= cell.max_row and \
+            j > cell.min_col and j <= cell.max_col:
+            return True
+    return False
+
 
 f='C:\\Users\\shine\\\onedrive\\社区采血名单.xlsx'
 villages = ('鼎美村', '后柯村', '芸美村')
@@ -13,9 +29,9 @@ for village in villages:
     # print(wsVillage['a3'].row)
     prev_fam_complete = 0
     family_name = None
-    for row in wsVillage.rows:
-        if row[0].row > 2:
-            if row[1].value is not None:
+    for row in range(3,len(wsVillage.rows)):
+        # if row[0].row > 2:
+            if is_cell_merged(row[1].row,row[1].column) == True:
                 tot_families += 1
                 if prev_fam_complete == 1:
                     coll_families += 1
@@ -28,7 +44,7 @@ for village in villages:
             else:
                 prev_fam_complete = 0
             tot_persons += 1
-        if row[1].value is not None:
+        if is_cell_merged(row[1].row,row[1].column) == True:
             family_name = row[1].value
     if prev_fam_complete == 1:
         coll_families += 1
