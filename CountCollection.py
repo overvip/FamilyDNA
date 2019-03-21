@@ -1,8 +1,11 @@
+#! python3
 # -*- coding:utf-8 -*-
 import openpyxl
 # from openpyxl.utils import column_index_from_string
 
+
 def rows_merged(i):
+    """计算每个家系人数，人数为函数返回值+1。"""
     m_list = wsVillage.merged_cells
     for cell in m_list:
         if cell.max_col == cell.min_col == 2:
@@ -11,45 +14,49 @@ def rows_merged(i):
     return 0
 
 
-f = 'C:\\Users\\shine\\onedrive\\社区采血名单.xlsx'
-villages = ('鼎美村', '后柯村', '芸美村')
+f = 'C:/Users/shine/onedrive/社区采血名单.xlsx'
+villages = ('鼎美村', '后柯村', '芸美村','凤山社区','东瑶村','贞岱村')
 wb = openpyxl.load_workbook(f)
 for village in villages:
     tot_families = coll_families = tot_persons = coll_persons = 0
-    wsVillage = wb[village]
+    if village in wb.sheetnames:
+        wsVillage = wb[village]
 
-    # todo : 从cell[b3]开始判断海家系，若该行b列非合并单元，则为单人家系，
-    #        否则为合并单元，该家系需采集多于1人，继续判断该合并单元占几行，
-    #        即该家系要采集几名成员。再检查j列标记是否采集。
+    #   从cell[b3]开始判断海家系，若该行b列非合并单元，则为单人家系，
+    #   否则为合并单元，该家系需采集多于1人，继续判断该合并单元占几行，
+    #   即该家系要采集几名成员。再检查j列标记是否采集。
 
-    merged_list = wsVillage.merged_cells
-    row = 3
-    while row <= wsVillage.max_row:
-        r = rows_merged(row)
-        if r > 0:
-            flag_completion = True
-            for j in range(r + 1):
-                if wsVillage.cell(row+j,7).value is not None:
-                    coll_persons += 1
-                else:
-                    flag_completion = False
-                tot_persons += 1
-            if flag_completion:
-                coll_families += 1
-            row = row + r +1
-        else:
+        merged_list = wsVillage.merged_cells
+        row = 3
+        while len(str(wsVillage.cell(row, 4).value).strip()) == 18:
             tot_families += 1
-            tot_persons += 1
-            if wsVillage.cell(row, 7).value is not None:
-                coll_persons += 1
-                coll_families += 1
-            row += 1
+            r = rows_merged(row)
+            if r > 0:
+                flag_completion = True
+                for j in range(r + 1):
+                    if wsVillage.cell(row+j,7).value is not None:
+                        coll_persons += 1
+                    else:
+                        flag_completion = False
+                    tot_persons += 1
+                if flag_completion:
+                    coll_families += 1
+                    print(wsVillage.cell(row,2).value)
+                row = row + r +1
+            else:
+                # tot_families += 1
+                tot_persons += 1
+                if wsVillage.cell(row, 7).value is not None:
+                    coll_persons += 1
+                    coll_families += 1
+                    print(wsVillage.cell(row,2).value)
+                row += 1
 
     msgResult = village + '家系总数' + str(tot_families) + '个,已采集' + \
                 str(coll_families) + '个，采集总数' + str(tot_persons) + \
                 '个，已采集' + str(coll_persons) + '个'
     print(msgResult)
     input('按回车显示下一个村')
-    wsVillage['a1'].value = msgResult
+    # wsVillage['a1'].value = msgResult
 print('统计完毕')
 wb.save(f)
